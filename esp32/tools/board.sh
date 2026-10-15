@@ -37,12 +37,17 @@
 #              Waveshare ESP32-C6-LCD-1.47 with a 172x320 status screen
 #   waveshare-s3-epaper-154
 #              Waveshare ESP32-S3-1.54inch-ePaper V2 with a 200x200 e-paper
+#   lilygo-t-display
+#              LILYGO T-Display (classic ESP32) with a 135x240 status
+#              screen, 16 MB flash
+#   lilygo-t-display-4mb
+#              Same board with 4 MB flash (single app slot, no OTA)
 #
 # The action defaults to build. Without PORT, flash and monitor use the only
 # matching serial port, if there is exactly one.
 set -euo pipefail
 
-usage() { sed -n '16,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '16,47p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 [ $# -ge 1 ] || usage 2
 case "$1" in -h|--help) usage ;; esac
@@ -100,6 +105,12 @@ case "$BOARD" in
     DEFAULTS="$DEFAULTS;devices/sdkconfig.$BOARD"
     # The S3's own USB-Serial-JTAG.
     PORTS="/dev/cu.usbmodem* /dev/ttyACM*"
+    ;;
+  lilygo-t-display|lilygo-t-display-4mb)
+    TARGET=esp32
+    DEFAULTS="$DEFAULTS;devices/sdkconfig.$BOARD"
+    # CH9102 USB-UART bridge (some older units use a CP2104 or CH340).
+    PORTS="/dev/cu.usbserial-* /dev/cu.wchusbserial* /dev/ttyUSB* /dev/ttyACM*"
     ;;
   *) echo "error: unknown board '$BOARD'" >&2; usage 2 ;;
 esac

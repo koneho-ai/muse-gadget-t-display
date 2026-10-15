@@ -42,7 +42,7 @@
 #include "esp_lcd_panel_ops.h"
 #include "happy_anim.h"
 #include "pixel_font.h"
-#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789
+#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_LILYGO_TDISPLAY_ST7789
 #include "driver/spi_master.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_st7789.h"
@@ -177,6 +177,30 @@ static const char *TAG = "link.led";
 #define LCD_H_RES        172
 #define LCD_V_RES        320
 #define LCD_X_GAP        34
+#define LCD_BAR_ROWS     10
+#define LCD_ANIM_SCALE   2
+#define LCD_DOT_MARGIN   4
+#define LCD_BUF_CAPS     MALLOC_CAP_DMA
+#elif CONFIG_HOMEHUB_LED_BACKEND_LILYGO_TDISPLAY_ST7789
+// LILYGO T-Display (original, classic ESP32): 135x240 ST7789V panel on SPI,
+// no status LED. Pins follow LILYGO's own TTGO-T-Display repo (README pin
+// table and TFT_eSPI User_Setups/Setup25_TTGO_T_Display.h): MOSI 19, SCLK 18,
+// CS 5, DC 16, RST 23, backlight 4 (active high).
+#define LCD_NAME         "LILYGO T-Display ST7789"
+#define LCD_HOST         SPI2_HOST
+#define LCD_PIN_SCLK     18
+#define LCD_PIN_MOSI     19
+#define LCD_PIN_CS       5
+#define LCD_PIN_DC       16
+#define LCD_PIN_RST      23
+#define LCD_PIN_BL       4
+#define LCD_PCLK_HZ      (40 * 1000 * 1000)
+#define LCD_H_RES        135
+#define LCD_V_RES        240
+// The 135x240 panel sits inside the controller's 240x320 CGRAM: TFT_eSPI's
+// ST7789 rotation 0 offsets for a 135-wide panel are col 52, row 40.
+#define LCD_X_GAP        52
+#define LCD_Y_GAP        40
 #define LCD_BAR_ROWS     10
 #define LCD_ANIM_SCALE   2
 #define LCD_DOT_MARGIN   4
@@ -404,7 +428,7 @@ static bool s_dot_drawn = false;
 static bool s_image_mode = false;
 static const uint8_t s_dot_rows[LCD_DOT_CELLS] = {0x6, 0xf, 0xf, 0x6};
 
-#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789
+#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_LILYGO_TDISPLAY_ST7789
 static SemaphoreHandle_t s_draw_done = NULL;
 
 static bool lcd_draw_done(esp_lcd_panel_io_handle_t io,
@@ -617,7 +641,13 @@ static void anim_task(void *arg) {
     }
 }
 
-#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789
+// Only the T-Display's panel is offset down its controller's CGRAM; the
+// other ST7789 panels start at row 0.
+#ifndef LCD_Y_GAP
+#define LCD_Y_GAP        0
+#endif
+
+#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_LILYGO_TDISPLAY_ST7789
 static esp_err_t lcd_panel_init(void) {
     s_draw_done = xSemaphoreCreateBinary();
     if (!s_draw_done) return ESP_ERR_NO_MEM;
@@ -653,7 +683,7 @@ static esp_err_t lcd_panel_init(void) {
     if (err == ESP_OK) err = esp_lcd_panel_reset(s_panel);
     if (err == ESP_OK) err = esp_lcd_panel_init(s_panel);
     if (err == ESP_OK) err = esp_lcd_panel_invert_color(s_panel, true);
-    if (err == ESP_OK) err = esp_lcd_panel_set_gap(s_panel, LCD_X_GAP, 0);
+    if (err == ESP_OK) err = esp_lcd_panel_set_gap(s_panel, LCD_X_GAP, LCD_Y_GAP);
     return err;
 }
 
@@ -1216,7 +1246,7 @@ static bool lcd_draw_image_rect(int x, int y, int w, int h, const void *pixels) 
         s_image_mode = true;
         lcd_clear_rows(0, LCD_V_RES);
     }
-#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789
+#if CONFIG_HOMEHUB_LED_BACKEND_IDEASPARK_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_WAVESHARE_C6_ST7789 || CONFIG_HOMEHUB_LED_BACKEND_LILYGO_TDISPLAY_ST7789
     // Already in the panel's format; copied only to reach DMA memory.
     memcpy(s_anim_buf, pixels, (size_t)w * h * sizeof(uint16_t));
 #else
