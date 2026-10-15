@@ -171,6 +171,7 @@ status screen.
 | ESP32-C6 devkit without PSRAM | Status light and button | `tools/board.sh c6-nopsram build` |
 | Espressif ESP32-S3-DevKitC-1 | Status light and button | `tools/board.sh espressif-s3-devkitc-1 build` |
 | ideaspark ESP32 with 1.9" display | Status on screen, images | `tools/board.sh ideaspark build` |
+| LILYGO T-Display (original, classic ESP32) | Status on screen, images | `tools/board.sh lilygo-t-display build` (16 MB) or `tools/board.sh lilygo-t-display-4mb build` (4 MB) |
 | Waveshare ESP32-C6-LCD-1.47 | Status on screen, images | `tools/board.sh waveshare-c6-lcd-147 build` |
 | Seeed SenseCAP Indicator | Status on a 4" screen, images | `tools/board.sh sensecap-indicator build` |
 | Waveshare ESP32-S3-1.54inch-ePaper V2 | Status on a 1.54" e-paper, black and white | `tools/board.sh waveshare-s3-epaper-154 build` |
