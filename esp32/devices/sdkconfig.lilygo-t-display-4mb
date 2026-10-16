@@ -35,9 +35,12 @@ CONFIG_HOMEHUB_BLE_NAME_SUFFIX="-Disp"
 # left-hand button on GPIO35 is not used by this profile.
 CONFIG_HOMEHUB_BUTTON_GPIO=0
 
-# Signed apps without Secure Boot use the Secure Boot V2 (RSA) scheme, which
-# the ESP32 supports from chip revision 3.0 (ESP32-D0WD-V3).
-CONFIG_ESP32_REV_MIN_3=y
+# This board ships with ESP32 revision 1.0 as well as 3.0 silicon. Revision 1
+# predates the Secure Boot V2 RSA signing scheme, so signed apps use the V1
+# ECDSA scheme and a separate ECDSA development key.
+CONFIG_SECURE_SIGNED_APPS_ECDSA_SCHEME=y
+CONFIG_SECURE_BOOT_SIGNING_KEY="dev_signing_key_ecdsa.pem"
+CONFIG_ESP32_REV_MIN_1=y
 
 # No PSRAM. mbedtls and every PSRAM-preferred buffer fall back to internal RAM.
 CONFIG_SPIRAM=n

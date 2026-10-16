@@ -22,7 +22,7 @@ not covered here.
 
 | | |
 |---|---|
-| Chip | ESP32 (Xtensa dual-core LX6), chip revision 3.0 or later needed |
+| Chip | ESP32 (Xtensa dual-core LX6), chip revision 1.0 or later (both profiles declare v1.0–v3.99) |
 | Display | 1.14 inch ST7789V IPS LCD, 135×240, SPI |
 | Flash | 4 MB or 16 MB, depending on the variant — two profiles below |
 | PSRAM | none |
@@ -55,6 +55,16 @@ so no home-network tunnel and no full avatar UI. The left-hand button
 (GPIO35) and the battery-voltage sense on GPIO34 are wired on the board but
 not used by this profile; `device.health` reports its battery fields as
 null.
+
+A note on chip revisions: T-Displays ship with both revision 1.0 and
+revision 3.0 ESP32 silicon (`esptool` prints it as it connects, e.g.
+`ESP32-D0WDQ6 (revision v1.0)`). Revision 1.0 predates the Secure Boot V2
+RSA app-signing scheme the other classic-ESP32 profiles use, so these
+profiles sign with the V1 ECDSA scheme and the shared development key in
+`esp32/dev_signing_key_ecdsa.pem` instead, and declare a minimum chip
+revision of 1.0. If a flash fails with `requires chip revision in range
+v3.0 - v3.99`, you have an older build of these profiles — pull the
+current ones.
 
 ## Which profile: 4 MB or 16 MB?
 
@@ -121,6 +131,9 @@ then give way to the green dot.
 
 This port was built for both flash variants and checked with the SDK's
 host tests and the overlay-applied config check from `devices/AGENTS.md`.
-It has not yet been run on hardware: the first flash should confirm the
-panel orientation and offsets (portrait, image centred with no clipped
-edges), the backlight, and a BLE scan showing `MuseGadget-Disp-XXXXXX`.
+The first hardware flash attempt (2026-10-16, a 4 MB revision-1.0 unit)
+exposed the chip-revision signing issue above, fixed the same day; the
+rebuilt images declare chip revision v1.0–v3.99 for both the bootloader
+and the app. Still to confirm on hardware: the panel orientation and
+offsets (portrait, image centred with no clipped edges), the backlight,
+and a BLE scan showing `MuseGadget-Disp-XXXXXX`.
